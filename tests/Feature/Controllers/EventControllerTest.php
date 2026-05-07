@@ -66,7 +66,7 @@ describe('POST /api/events/{id}/reserve', function() {
             )
             ->assertCreated()
             ->assertSimilarJson([
-                'reservation_id' => 1,
+                'reservation_id' => $event->reservations()->first()->id,
             ]);
 
         $event_reservations = $event->reservations()->get();

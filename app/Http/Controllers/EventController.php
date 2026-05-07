@@ -20,8 +20,8 @@ class EventController extends Controller
             );
         }
 
-        $reserved_tickets = $event->reservations()->on_hold()->sum(('number_of_tickets'));
-        $sold_tickets = $event->reservations()->confirmed()->sum(('number_of_tickets'));
+        $reserved_tickets = (int)$event->reservations()->on_hold()->sum(('number_of_tickets'));
+        $sold_tickets = (int)$event->reservations()->confirmed()->sum(('number_of_tickets'));
         $available_tickets = $event->total_tickets - $event->reservations()->sum(('number_of_tickets'));
 
         return response()->json(
