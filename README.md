@@ -63,6 +63,23 @@ Run `php artisan migrate` which will prepare the database and create tables.
   - Refer to `DB_DATABASE` in `phpunit.xml`
 </details>
 
+### Seeding the database
+<details>
+  <summary>Click to expand</summary>
+
+Let's create 3 events where 1 has a reservation with 10 number of tickets.
+
+Run `php artisan tinker` to interact with the app from command line then:
+```php
+use \App\Models\Event as EventModel;
+EventModel::create(['title' => 'The Music of Pink Floyd', 'total_tickets' => 10])
+EventModel::create(['title' => 'The Music of Oasis', 'total_tickets' => 10])
+$bach_event = EventModel::create(['title' => 'The Best of J.S. Bach', 'total_tickets' => 100])
+$bach_event->reservations()->create(['number_of_tickets' => 10])
+```
+
+</details>
+
 ### Running locally
 <details>
   <summary>Click to expand</summary>
