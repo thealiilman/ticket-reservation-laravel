@@ -16,6 +16,7 @@ The objective is to build a ticket reservation service within a 4-6 hour period 
 - Reserve X number of tickets
   - API: `POST /events/{id}/reserve`
     - When tickets are available, responds with JSON object containing `reservation_id` as the sole property and with status HTTP 201 Created
+    - When event isn't found, responds with HTTP 404 Not Found
     - When tickets are unavailable, responds with HTTP 410 Gone
 - Confirm the reservation
   - API: `POST /reservations/{id}/confirm`
