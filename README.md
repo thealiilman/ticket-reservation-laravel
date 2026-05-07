@@ -5,6 +5,26 @@ The objective is to build a ticket reservation service within a 4-6 hour period 
 ## Database design
 <img width="631" height="252" alt="Screenshot 2026-05-03 at 12 15 06" src="https://github.com/user-attachments/assets/fd93ce2a-7881-4cf1-82f8-83fbf463bc02" />
 
+## Key decisions / trade-offs
+### Not storing number of reserved tickets, sold tickets, and available tickets in `events` table
+My implementation with obtaining inventory status relies on the event querying its reservations.
+
+1. On-hold associated reservations
+2. Confirmed associated reservations
+3. All associated reservations
+
+For each of these queries, we execute a `SUM` on the `number_of_tickets` column. From here, we'll get:
+
+1. Number of on-hold tickets
+2. Number of confirmed tickets
+3. Number of unavailable tickets
+
+No counter-caching in `events` table. I'm not concerned about performance for the following reasons:
+1. We can add an index on `event_id` in `reservations` table to avoid full table scans, scanning only for rows with the given `event_id`
+2. Most events have capacity in 4-digits, few going to 5-digits whilst 6-digits and beyond are rare – database may well manage to look for up to 6-digits worth of rows with index on `event_id` just fine
+### Database lock instead of cache lock
+I intentionally went with database lock to prevent race conditions because the circumstances are strictly to do with accessing the database. If there were requests to third-party services then a cache lock is fitting – with cache lock, we can prevent race conditions for possibly any code block.
+
 ## Flow
 <details>
   <summary>Click to expand</summary>
