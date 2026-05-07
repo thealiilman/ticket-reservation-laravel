@@ -151,21 +151,21 @@ Gemini's justification for why the test works:
   <summary>Click to expand</summary>
 
 - Retrieve event details
-  - API: `GET /events/{id}`
+  - API: `GET /api/events/{id}`
     - When event is found, responds with JSON object containing `title`, `description`, `total_tickets`, `reserved_tickets`, `sold_tickets` and `available_tickets` as the properties, and with status HTTP 200 OK
     - When event isn't found, responds with HTTP 404 Not Found
 - Reserve X number of tickets
-  - API: `POST /events/{id}/reserve`
+  - API: `POST /api/events/{id}/reserve`
     - When tickets are available, responds with JSON object containing `reservation_id` as the sole property and with status HTTP 201 Created
     - When event isn't found, responds with HTTP 404 Not Found
     - When tickets are unavailable, responds with HTTP 410 Gone
 - Confirm the reservation
-  - API: `POST /reservations/{id}/confirm`
+  - API: `POST /api/reservations/{id}/confirm`
     - When confirmation is successful, responds with HTTP 204 No Content
     - When confirmation is unsuccessful, responds with HTTP 400 Bad Request
   - This is to simulate successful payment and the reserved tickets have been sold
 - Cancel the reservation
-  - API: `DELETE /reservations/{id}`
+  - API: `DELETE /api/reservations/{id}`
     - When reservation is found and deleted, responds with HTTP 204 No Content
     - When reservation is found but already confirmed, responds with HTTP 405 Method Not Allowed
     - When reservation isn't found, responds with HTTP 404 Not Found
