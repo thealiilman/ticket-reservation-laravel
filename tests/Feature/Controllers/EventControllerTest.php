@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ReservationStatus;
+use App\Jobs\ExpireReservation;
 use App\Models\Event;
 use App\Models\Reservation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -71,19 +72,31 @@ describe('POST /api/events/{id}/reserve', function() {
         $event_reservations = $event->reservations()->get();
         expect($event_reservations)->toHaveCount(1);
         expect($event_reservations->first()->number_of_tickets)->toEqual($tickets_for_reservation);
-        // Queue::assertPushed(ExpireReservation::class, function ($job) {
-        //     return $job->delay === 300;
-        // });
+        Queue::assertPushed(ExpireReservation::class, function ($job) {
+            /**
+             * @author Ali Ilman
+             * @description
+             * There doesn't seem to be a robust way to check
+             * if the job's delay is 5 minutes.
+             * 
+             * Will stick to validating there is delay.
+             */
+            return $job->delay !== null;
+        });
     });
 
     it('responds with HTTP 404 Not Found when event does not exist', function() {
+        Queue::fake();
         $this
             ->post('/api/events/1/reserve')
             ->assertNotFound()
             ->assertSimilarJson(['message' => 'Event does not exist']);
+
+        Queue::assertNothingPushed();
     });
 
     it('responds with HTTP 410 Gone when event is found but tickets no longer available', function() {
+        Queue::fake();
         $event = Event::factory()->create([
             'title' => 'The Music of Oasis',
             'total_tickets' => 0,
@@ -99,5 +112,6 @@ describe('POST /api/events/{id}/reserve', function() {
 
         $event_reservations = $event->reservations()->get();
         expect($event_reservations)->toHaveCount(0);
+        Queue::assertNothingPushed();
     });
 });

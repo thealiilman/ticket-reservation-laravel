@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ExpireReservation;
 use App\Models\Event;
 use DB;
 use Illuminate\Http\Request;
@@ -57,6 +58,7 @@ class EventController extends Controller
             }
 
             $reservation = $event->reservations()->create(['number_of_tickets' => $tickets_for_reservation]);
+            ExpireReservation::dispatch($reservation->id)->delay(now()->addMinutes(5));
 
             return response()->json(
                 ['reservation_id' => $reservation->id],
