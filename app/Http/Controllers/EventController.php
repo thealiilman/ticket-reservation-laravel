@@ -38,7 +38,7 @@ class EventController extends Controller
 
     public function reserve(Request $request, string $id) {
         return DB::transaction(function() use ($request, $id) {
-            $event = Event::find($id);
+            $event = Event::lockForUpdate()->find($id);
 
             if (!$event) {
                 return response()->json(
