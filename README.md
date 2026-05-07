@@ -39,4 +39,78 @@ The objective is to build a ticket reservation service within a 4-6 hour period 
 </details>
 
 ## Ideas for extending the service
-To be filled.
+### Pick-me-up emails for events with available tickets
+<details>
+    <summary>Click to expand</summary>
+
+Adding `expired` and `cancelled` statuses to Reservation opens the door to pick-me-up emails we could send to the user should the event still have available tickets.
+
+> _1 week left until The Music of a-ha concert_
+> 
+> _sees the user has a cancelled reservation for The Music of a-ha with 2 tickets_
+> 
+> JOHN DOE! Do you wish to see the orchestra perform the music of a-ha? We can see you were intrigued at one point but you didn't proceed with your reservation. 😢 Here, have a 10% discount.
+
+With these statuses in mind, we would have to replace the deletion of the reservation record with:
+1. Setting status to `expired` in the background job
+2. Setting status to `cancelled` when user wants to cancel – in the process, converts delete API to cancel API
+
+</details>
+
+### Venue
+<details>
+    <summary>Click to expand</summary>
+
+This opens up LOTS of possibilities:
+- Browse events by venue e.g. events at DFP, events at Hin Bus Depot, events at The Campus
+- Seating
+    - The venue would have its default seating layout
+    - It's significant that we give the event the ability to "minimise" the seating – perhaps the venue has 10 rows of seats but for this occasion, the 2 rows closest to the stage will be taken up by performers thus the event's organiser doesn't want to show those rows
+    - Users can select their seats. We can also tease them at the end of the year if W42 is the seat they selected the most
+- Analysis
+    - Which performing arts centres had the most events in the first full year after the pandemic lockdowns?
+    - Which parks held events during the pandemic?
+    - Which users are the most frequent visitors of the DFP?
+
+</details>
+
+### Categorisation
+<details>
+    <summary>Click to expand</summary>
+
+Is this an orchestra? Is this sports? Is this a workshop?
+
+Categorisation would provide the following:
+- More specific searchers for users
+    - I want orchestra!
+    - I want pottery workshops!
+- Analysis
+    - Which sport had the most tickets sold over the past year?
+    - How did each type of performing arts perform (unpunintended) in the last few weeks?
+</details>
+
+### Grouping events
+<details>
+    <summary>Click to expand</summary>
+
+This would be something which requires radical changes.
+
+As it is, events are standalone.
+
+What if the MPO want to perform all Pink Floyd singles split across 8 concerts throughout the month?
+
+How could they generate more visibility on each concert under the same campaign? Folks go on the platform and think – _wow, the MPO will be performing the popular tunes of Pink Floyd? There will be eight of them!_
+
+Each concert with the same marketing material. Instant visibility of different _occasions_ for the same event.
+
+There are arguments that an occasion is a kind of event whereas an event is anything that is happening thus an event having many occasions sounds fitting.
+</details>
+
+### Ticket types
+<details>
+  <summary>Click to expand</summary>
+
+There could be event organisers wanting to add touches of grandeur to certain seats.
+
+An event could have various ticket types where each type has its own availability (and pricing).
+</details>
