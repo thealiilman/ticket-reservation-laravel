@@ -2,6 +2,82 @@
 This Laravel application is my submission for CJ's take-home technical assessment.
 
 The objective is to build a ticket reservation service within a 4-6 hour period where the main focus – as I understand it – is to get a functioning application which respects the expected flow whilst considering ideas one can apply to extend the service.
+
+## Running locally and running tests
+### Installing dependencies
+<details>
+  <summary>Click to expand</summary>
+
+The project requires PHP v8.3 to v8.5 which is the recommended version range for Laravel 13 so far. Ensure that the appropriate PHP version is installed.
+
+Once the appropriate PHP version has been installed, run `composer install` to install the project's dependencies.
+</details>
+
+### Environment variables
+<details>
+  <summary>Click to expand</summary>
+
+Copy-paste the following content into a `.env` file:
+```
+APP_NAME=Laravel
+APP_ENV=local
+APP_KEY=base64:JsRKpqU304s0KRyhKLdGvqrF+JSTzEIu2ANC8yAzvwA=
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+APP_LOCALE=en
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=en_US
+APP_MAINTENANCE_DRIVER=file
+
+LOG_CHANNEL=stack
+LOG_STACK=single
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=debug
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=ticket_reservation
+DB_USERNAME=root
+DB_PASSWORD=
+
+BROADCAST_CONNECTION=log
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=database
+
+CACHE_STORE=database
+```
+
+</details>
+
+### Setting up database
+<details>
+  <summary>Click to expand</summary>
+
+I recommend installing [DBngin](https://dbngin.com/) by TablePlus to manage database servers
+
+Run `php artisan migrate` which will prepare the database and create tables.
+- `ticket_reservation` is the name for local environment's database
+  - Refer to `DB_DATABASE` in `.env`
+- `ticket_reservation_local` is the name for testing environment's database
+  - Refer to `DB_DATABASE` in `phpunit.xml`
+</details>
+
+### Running locally
+<details>
+  <summary>Click to expand</summary>
+
+- Run `php artisan serve` to start the application server
+- Run `php artisan queue:work` to start the worker process – queued jobs will be processed by this process
+</details>
+
+### Running tests
+<details>
+  <summary>Click to expand</summary
+
+As the project uses Pest for the test suite, run `./vendor/bin/pest` to execute tests.
+</details>
+
 ## Database design
 <img width="631" height="252" alt="Screenshot 2026-05-03 at 12 15 06" src="https://github.com/user-attachments/assets/fd93ce2a-7881-4cf1-82f8-83fbf463bc02" />
 
@@ -31,7 +107,43 @@ No counter-caching in `events` table. I'm not concerned about performance for th
 ### Database lock instead of cache lock
 <details>
   <summary>Click to expand</summary>
+
 I intentionally went with database lock to prevent race conditions because the circumstances are strictly to do with accessing the database. If there were requests to third-party services then a cache lock is fitting – with cache lock, we can prevent race conditions for possibly any code block.
+</details>
+
+## Note on AI Assistance
+<details>
+  <summary>Click to expand</summary>
+
+I'm going to shed some light on the concurrency test in `EventControllerTest.php`.
+
+I reckon I spent at least 2 hours in total tinkering with various approaches – `Concurrency::run`, `Http::pool`; all to no avail.
+I even had the server running with testing environment whilst the test executes network requests to the server – this didn't feel maintainable and wouldn't be ideal for running in CI/CD pipelines.
+
+I resorted to Gemini for help because I felt having a test for a significant part of the reservation process is crucial even though as I
+have experienced now how DIFFICULT testing concurrency is!
+
+For my own curiosity, I asked Gemini how it could look like if we were to have a test with 3 concurrent requests – it didn't look pretty.
+
+Prompt used:
+```md
+Define AI: an esteemed software engineer with tremendous expertise in PHP, Laravel, Pest and concurrency.
+
+My question to you: in @app/Http/Controllers/EventController.php, I have reserve method for creating event reservations
+The content of the method is wrapped by a DB transaction and then retrieval of Event contains lockForUpdate.
+How can I write a test in @tests/Feature/Controllers/EventControllerTest.php to validate that concurrency is respected e.g. two requests happening, first one has 10 tickets and 10 tickets are reserved and event considered sold out, second request sees HTTP 410
+```
+
+As Gemini was trying to come up with suggestions, I can see it even experimented with `Concurrency::run` which was unsuccessful – it ran into the same error as I did which has to do with serialisation.
+
+Gemini's justification for why the test works:
+* DatabaseMigrations: Unlike RefreshDatabase, this trait doesn't wrap the test in a DB::beginTransaction(). The $event is
+  physically inserted into your MySQL database, making it visible to the child process.
+* pcntl_fork(): Creates a true parallel process. The Parent and Child hit the reserve method at roughly the same time.
+* lockForUpdate(): When the first process enters the transaction in EventController.php, it locks the event row. The second
+  process will hit the same line and block (wait) until the first process finishes and commits.
+* Validation: Once the first process commits (10 tickets taken), the second process wakes up, re-calculates $available_tickets,
+  sees 0, and correctly returns the 410 Gone status.
 </details>
 
 ## Flow
