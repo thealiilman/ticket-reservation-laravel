@@ -47,3 +47,57 @@ describe('GET /api/events/{id}', function() {
             ->assertSimilarJson(['message' => 'Event does not exist']);
     });
 });
+
+describe('POST /api/events/{id}/reserve', function() {
+    it('responds with HTTP 201 Created when event is found and reservation is made', function() {
+        Queue::fake();
+        $total_tickets = 100;
+        $tickets_for_reservation = 5;
+        $event = Event::factory()->create([
+            'title' => 'The Music of Oasis',
+            'total_tickets' => $total_tickets,
+        ]);
+
+        $this
+            ->post(
+                "/api/events/{$event->id}/reserve",
+                ['number_of_tickets' => $tickets_for_reservation]
+            )
+            ->assertCreated()
+            ->assertSimilarJson([
+                'reservation_id' => 1,
+            ]);
+
+        $event_reservations = $event->reservations()->get();
+        expect($event_reservations)->toHaveCount(1);
+        expect($event_reservations->first()->number_of_tickets)->toEqual($tickets_for_reservation);
+        // Queue::assertPushed(ExpireReservation::class, function ($job) {
+        //     return $job->delay === 300;
+        // });
+    });
+
+    it('responds with HTTP 404 Not Found when event does not exist', function() {
+        $this
+            ->post('/api/events/1/reserve')
+            ->assertNotFound()
+            ->assertSimilarJson(['message' => 'Event does not exist']);
+    });
+
+    it('responds with HTTP 410 Gone when event is found but tickets no longer available', function() {
+        $event = Event::factory()->create([
+            'title' => 'The Music of Oasis',
+            'total_tickets' => 0,
+        ]);
+
+        $this
+            ->post(
+                "/api/events/{$event->id}/reserve",
+                ['number_of_tickets' => 5]
+            )
+            ->assertGone()
+            ->assertSimilarJson(['message' => 'Sorry folks, no more tickets are available']);
+
+        $event_reservations = $event->reservations()->get();
+        expect($event_reservations)->toHaveCount(0);
+    });
+});
