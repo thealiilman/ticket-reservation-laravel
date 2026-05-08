@@ -173,6 +173,7 @@ Gemini's justification for why the test works:
     - When event isn't found, responds with HTTP 404 Not Found
 - Reserve X number of tickets
   - API: `POST /api/events/{id}/reserve`
+    - Accepts a body with `number_of_tickets` property
     - When tickets are available, responds with JSON object containing `reservation_id` as the sole property and with status HTTP 201 Created
     - When event isn't found, responds with HTTP 404 Not Found
     - When tickets are unavailable, responds with HTTP 410 Gone
