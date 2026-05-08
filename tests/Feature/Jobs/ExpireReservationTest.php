@@ -8,7 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('destroys a reservation when given reservation ID is found in database', function() {
+it('destroys the reservation when given reservation ID is found in database and it is still on-hold', function() {
     Queue::fake();
     $event = Event::factory()->create([
         'title' => 'The Music of Oasis',
@@ -30,6 +30,22 @@ it('destroys a reservation when given reservation ID is found in database', func
     expect($on_hold_reservations)->toBe(0);
     $confirmed_reservations = $event->reservations()->confirmed()->count();
     expect($confirmed_reservations)->toBe(1);
+});
+
+it('does not do anything when given reservation ID is found in database but it is already confirmed', function() {
+    Queue::fake();
+    $event = Event::factory()->create([
+        'title' => 'The Music of Oasis',
+        'total_tickets' => 0,
+    ]);
+    $reservation = Reservation::factory()->create([
+        'number_of_tickets' => 0,
+        'event_id' => $event->id,
+        'status' => ReservationStatus::Confirmed,
+    ]);
+
+    (new ExpireReservation($reservation->id))->handle();
+    expect($event->reservations->count())->toBe(1);
 });
 
 it('does not do anything when given reservation ID is not found in database', function() {

@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\ReservationStatus;
 use App\Models\Reservation;
 use DB;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,7 +21,7 @@ class ExpireReservation implements ShouldQueue
     {
         DB::transaction(function () {
             $reservation = Reservation::lockForUpdate()->find($this->reservation_id);
-            if ($reservation) {
+            if ($reservation && $reservation->status === ReservationStatus::OnHold) {
                 $reservation->delete();
             }
         });
